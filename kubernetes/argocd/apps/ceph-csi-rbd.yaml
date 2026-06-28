@@ -1,0 +1,53 @@
+# Ceph CSI (RBD) — connects to the external Proxmox Ceph cluster, mirroring RKE2.
+# Creates the CSI driver + a default `ceph-rbd` StorageClass. The cephx credential is supplied
+# separately as a SealedSecret (see kubernetes/apps/ceph-csi-rbd/) so nothing sensitive is in
+# plaintext here. Until that secret exists, the SC is present but PVCs stay Pending.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ceph-csi-rbd
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: talos-homelab
+  source:
+    repoURL: https://ceph.github.io/csi-charts
+    chart: ceph-csi-rbd
+    targetRevision: 3.17.0
+    helm:
+      values: |
+        # External Proxmox Ceph cluster (same one RKE2 uses).
+        csiConfig:
+          - clusterID: "36a09df5-4098-4572-9e72-b8366e7fe0af"
+            monitors:
+              - "10.100.0.11:3300"
+              - "10.100.0.12:3300"
+              - "10.100.0.13:3300"
+        storageClass:
+          create: true
+          name: ceph-rbd
+          annotations:
+            storageclass.kubernetes.io/is-default-class: "true"
+          clusterID: "36a09df5-4098-4572-9e72-b8366e7fe0af"
+          pool: kubernetes
+          imageFeatures: "layering"
+          fstype: ext4
+          reclaimPolicy: Delete
+          allowVolumeExpansion: true
+          # secret refs default to csi-rbd-secret in this namespace (supplied via SealedSecret)
+        secret:
+          create: false
+          name: csi-rbd-secret
+        provisioner:
+          replicaCount: 2
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ceph-csi-rbd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

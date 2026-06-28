@@ -9,6 +9,7 @@ spec:
     - https://github.com/Adithya-Rajendran/homelab-talos.git
     - https://helm.cilium.io
     - https://charts.jetstack.io
+    - https://ceph.github.io/csi-charts
   destinations:
     - server: https://kubernetes.default.svc
       namespace: "*"
