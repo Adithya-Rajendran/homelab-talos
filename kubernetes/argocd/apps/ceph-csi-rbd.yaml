@@ -45,6 +45,12 @@ spec:
     server: https://kubernetes.default.svc
     namespace: ceph-csi-rbd
   syncPolicy:
+    # Talos enforces PodSecurity 'baseline' by default; the CSI driver needs privileged.
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: privileged
+        pod-security.kubernetes.io/warn: privileged
+        pod-security.kubernetes.io/audit: privileged
     automated:
       prune: true
       selfHeal: true
