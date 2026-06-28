@@ -1,4 +1,4 @@
-# talos-proxmox-gitops
+# homelab-talos
 
 A 3-node **Talos Linux** Kubernetes cluster on **Proxmox**, provisioned with **OpenTofu** and
 **talhelper**, and managed end-to-end by **GitOps (Argo CD)** — both the cluster lifecycle

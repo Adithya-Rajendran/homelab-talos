@@ -17,7 +17,7 @@ spec:
       helm:
         valueFiles:
           - $values/kubernetes/bootstrap/cilium-values.yaml
-    - repoURL: https://github.com/Adithya-Rajendran/talos-proxmox-gitops.git
+    - repoURL: https://github.com/Adithya-Rajendran/homelab-talos.git
       targetRevision: main
       ref: values
   destination:
