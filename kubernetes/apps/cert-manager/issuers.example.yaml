@@ -1,0 +1,50 @@
+# TEMPLATE — not synced by Argo (filename ends in .example.yaml).
+# To enable real certificates, fill in your ACME email + solver, rename to issuers.yaml,
+# add it to a cert-manager-config Application (sync-wave after cert-manager), and commit.
+#
+# A self-signed issuer (works immediately, no external config) to prove cert-manager works:
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned
+spec:
+  selfSigned: {}
+---
+# Let's Encrypt (mirrors the RKE2 cluster's letsencrypt-prod/staging). Requires a solver.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: CHANGEME@example.com
+    privateKeySecretRef:
+      name: letsencrypt-staging-account-key
+    solvers:
+      # Example HTTP-01 via the Cilium Gateway (needs a Gateway + reachable LB IP):
+      - http01:
+          gatewayHTTPRoute:
+            parentRefs:
+              - name: shared-gateway
+                namespace: gateway
+                kind: Gateway
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: CHANGEME@example.com
+    privateKeySecretRef:
+      name: letsencrypt-prod-account-key
+    solvers:
+      - http01:
+          gatewayHTTPRoute:
+            parentRefs:
+              - name: shared-gateway
+                namespace: gateway
+                kind: Gateway

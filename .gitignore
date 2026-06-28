@@ -1,0 +1,25 @@
+# --- Secrets / credentials (NEVER commit) ---
+age.key
+*.agekey
+**/clusterconfig/          # talhelper rendered machineconfigs contain decrypted secrets
+talosconfig
+kubeconfig
+*.decrypted.yaml
+.sops.decrypted*
+
+# --- OpenTofu / Terraform ---
+.terraform/
+.terraform.lock.hcl.bak
+*.tfstate
+*.tfstate.*
+*.tfvars.secret
+crash.log
+override.tf
+override.tf.json
+
+# --- Misc ---
+.DS_Store
+*.log
+
+# talhelper rendered output (decrypted secrets)
+talos/clusterconfig/

@@ -1,0 +1,13 @@
+# SOPS encryption rules for the Talos secrets layer.
+# talhelper's talsecret (cluster PKI) is fully encrypted to the age recipient below.
+# The matching PRIVATE key lives at ~/.config/sops/age/keys.txt (gitignored) and must be
+# backed up offline — it is the single root of trust for the Talos cluster secrets.
+creation_rules:
+  # talhelper cluster secrets — encrypt the entire document
+  - path_regex: talos/talsecret\.sops\.ya?ml$
+    age: age1dsavcxtarxugr2sr5uy7stx8trcjjx9vmm8s6ggjtkwxuqmaq3qqyzachj
+
+  # any other *.sops.yaml — encrypt only sensitive values
+  - path_regex: \.sops\.ya?ml$
+    encrypted_regex: "^(data|stringData|token|secret|.*[Pp]assword|.*[Kk]ey)$"
+    age: age1dsavcxtarxugr2sr5uy7stx8trcjjx9vmm8s6ggjtkwxuqmaq3qqyzachj

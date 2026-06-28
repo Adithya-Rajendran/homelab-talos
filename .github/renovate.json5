@@ -1,0 +1,48 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+  ],
+  // Helm charts referenced directly in Argo Applications + OpenTofu providers are picked up
+  // automatically. Below we add custom matchers for things in plain YAML.
+  customManagers: [
+    {
+      // Talos + Kubernetes versions in talenv.yaml
+      customType: "regex",
+      managerFilePatterns: ["/talos/talenv\\.yaml$/"],
+      matchStrings: [
+        "talosVersion:\\s*(?<currentValue>v[0-9.]+)",
+        "kubernetesVersion:\\s*(?<currentValue>v[0-9.]+)",
+      ],
+      datasourceTemplate: "github-releases",
+      depNameTemplate: "siderolabs/talos",
+    },
+    {
+      // Pinned versions embedded in README / Makefile / bootstrap (gateway-api, cilium, argocd)
+      customType: "regex",
+      managerFilePatterns: ["/(README\\.md|Makefile|kubernetes/.*\\.ya?ml)$/"],
+      matchStrings: [
+        "gateway-api/releases/download/(?<currentValue>v[0-9.]+)/",
+        "cilium/cilium --version (?<currentValue>[0-9.]+)",
+      ],
+      datasourceTemplate: "github-releases",
+      depNameTemplate: "kubernetes-sigs/gateway-api",
+    },
+  ],
+  packageRules: [
+    // OS-level bumps reboot nodes — require manual approval, never auto-merge.
+    {
+      matchPackageNames: ["siderolabs/talos"],
+      addLabels: ["os-upgrade"],
+      dependencyDashboardApproval: true,
+    },
+    // Low-risk: auto-merge patch bumps of in-cluster charts.
+    {
+      matchManagers: ["argocd", "helm-values", "helmv3"],
+      matchUpdateTypes: ["patch"],
+      automerge: true,
+    },
+  ],
+}

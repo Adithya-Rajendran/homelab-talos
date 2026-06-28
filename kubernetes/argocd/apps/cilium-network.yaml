@@ -1,0 +1,21 @@
+# Cilium LoadBalancer IP pool + L2 announcement policy.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cilium-network
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: talos-homelab
+  source:
+    repoURL: https://github.com/Adithya-Rajendran/talos-proxmox-gitops.git
+    targetRevision: main
+    path: kubernetes/apps/network
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

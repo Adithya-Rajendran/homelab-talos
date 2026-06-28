@@ -1,0 +1,66 @@
+# Cilium Helm values — Talos-correct + kube-proxy replacement + Gateway API + L2 LB.
+# Used BOTH for the one-time bootstrap (helm install) and the Argo CD HelmRelease that
+# adopts it (kubernetes/apps/cilium). Keep this file as the single source of truth.
+cluster:
+  name: talos-homelab
+
+ipam:
+  mode: kubernetes
+
+# Cilium replaces kube-proxy (disabled in the Talos machine config).
+kubeProxyReplacement: true
+
+# Point the CNI at Talos KubePrism (local HA apiserver), not the VIP — avoids a
+# chicken/egg dependency on the VIP during startup.
+k8sServiceHost: localhost
+k8sServicePort: 7445
+
+# Talos requires an explicit capability set WITHOUT SYS_MODULE (modules are built-in).
+securityContext:
+  capabilities:
+    ciliumAgent:
+      - CHOWN
+      - KILL
+      - NET_ADMIN
+      - NET_RAW
+      - IPC_LOCK
+      - SYS_ADMIN
+      - SYS_RESOURCE
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    cleanCiliumState:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - SYS_RESOURCE
+
+# Talos mounts the cgroup2 fs itself.
+cgroup:
+  autoMount:
+    enabled: false
+  hostRoot: /sys/fs/cgroup
+
+# LoadBalancer IPs announced on L2 (mirrors the RKE2 cluster's Cilium L2 setup).
+l2announcements:
+  enabled: true
+externalIPs:
+  enabled: true
+# L2 announcements increase apiserver traffic — raise the client rate limit.
+k8sClientRateLimit:
+  qps: 10
+  burst: 20
+
+# Gateway API (CRDs v1.5.1 are applied before Cilium — see bootstrap order).
+gatewayAPI:
+  enabled: true
+
+operator:
+  replicas: 2
+
+# Observability (lightweight; UI reachable via `cilium hubble ui` / port-forward).
+hubble:
+  relay:
+    enabled: true
+  ui:
+    enabled: true

@@ -1,0 +1,27 @@
+# App-of-apps: this single Application is applied once at bootstrap and then manages every
+# other Application in kubernetes/argocd/apps/ (which in turn manage the platform components).
+# From here on, adding/removing a platform component = committing a file under apps/.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: talos-homelab
+  source:
+    repoURL: https://github.com/Adithya-Rajendran/talos-proxmox-gitops.git
+    targetRevision: main
+    path: kubernetes/argocd/apps
+    directory:
+      recurse: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

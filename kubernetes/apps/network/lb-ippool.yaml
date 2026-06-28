@@ -1,0 +1,9 @@
+# LoadBalancer IP pool — non-overlapping with the RKE2 cluster (which uses .240/.250).
+# Usable range 10.20.0.225 - 10.20.0.238 (the VIP .79 is intentionally outside this pool).
+apiVersion: cilium.io/v2
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: default-pool
+spec:
+  blocks:
+    - cidr: 10.20.0.224/28

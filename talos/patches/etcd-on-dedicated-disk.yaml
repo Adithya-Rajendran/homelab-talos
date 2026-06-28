@@ -1,0 +1,20 @@
+# etcd latency optimization (Talos side).
+#
+# Talos 1.13 removed `machine.disks`, and etcd's data-dir is fixed at /var/lib/etcd
+# (it's a disallowed extraArg) — and user/external volumes can only mount under
+# /var/mnt/<name>. So the supported way to put etcd on a dedicated fast disk is to
+# place the EPHEMERAL volume (which contains /var, and therefore /var/lib/etcd) on a
+# separate disk via a VolumeConfig diskSelector.
+#
+# Pairs with the Proxmox-side tuning in tofu/ (dedicated virtio-scsi-single controller
+# per disk + iothread + cache=none on local NVMe) to minimize etcd fsync latency.
+#
+# `!system_disk` selects sdb (the 180G data disk); the install/system disk is sda.
+apiVersion: v1alpha1
+kind: VolumeConfig
+name: EPHEMERAL
+provisioning:
+  diskSelector:
+    match: "!system_disk"
+  # Grow to fill the dedicated disk; floor here just guards against selecting a tiny disk.
+  minSize: 100GiB

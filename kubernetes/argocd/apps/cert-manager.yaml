@@ -1,0 +1,31 @@
+# cert-manager controller (mirrors the RKE2 cluster). ClusterIssuers are left as templates
+# in kubernetes/apps/cert-manager/issuers.example.yaml because LE issuers need your ACME
+# email + DNS-01/HTTP-01 solver config (a workload-layer concern, deferred for now).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: talos-homelab
+  source:
+    repoURL: https://charts.jetstack.io
+    chart: cert-manager
+    targetRevision: v1.20.3
+    helm:
+      values: |
+        crds:
+          enabled: true
+        replicaCount: 2
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

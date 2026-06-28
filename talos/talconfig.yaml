@@ -1,0 +1,97 @@
+# talhelper config — renders per-node Talos machineconfigs into ./clusterconfig (gitignored).
+# Versions come from talenv.yaml; secrets from talsecret.sops.yaml.
+# yaml-language-server: $schema=https://raw.githubusercontent.com/budimanjojo/talhelper/master/pkg/config/schemas/talconfig.json
+---
+clusterName: talos-homelab
+
+talosVersion: ${talosVersion}
+kubernetesVersion: ${kubernetesVersion}
+
+# Control-plane VIP (shared L2 VIP managed by Talos across all 3 CP nodes).
+endpoint: https://10.20.0.79:6443
+
+# All 3 nodes are control-plane AND schedulable (hyperconverged, mirrors the RKE2 layout).
+allowSchedulingOnControlPlanes: true
+
+# Cilium owns the datapath — disable the built-in CNI (kube-proxy is disabled via patch).
+cniConfig:
+  name: none
+
+# Non-overlapping with the RKE2 cluster (which uses 10.42.0.0/16 + 10.43.0.0/16).
+clusterPodNets:
+  - 10.244.0.0/16
+clusterSvcNets:
+  - 10.96.0.0/12
+
+additionalApiServerCertSans:
+  - 10.20.0.79
+  - 10.20.0.70
+  - 10.20.0.71
+  - 10.20.0.72
+  - 127.0.0.1
+  - localhost
+additionalMachineCertSans:
+  - 10.20.0.79
+  - 10.20.0.70
+  - 10.20.0.71
+  - 10.20.0.72
+
+nodes:
+  - hostname: talos-cp-01
+    ipAddress: 10.20.0.70
+    controlPlane: true
+    installDisk: /dev/sda                                                  # system disk (sda); EPHEMERAL goes to sdb
+    talosImageURL: factory.talos.dev/installer/ce4c980550dd2ab1b17bbf2b08801c7eb59418eafe8f279833297925d67c7515
+    networkInterfaces:
+      - deviceSelector:
+          physical: true
+        dhcp: false
+        addresses:
+          - 10.20.0.70/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 10.20.0.1
+        vip:
+          ip: 10.20.0.79
+  - hostname: talos-cp-02
+    ipAddress: 10.20.0.71
+    controlPlane: true
+    installDisk: /dev/sda
+    talosImageURL: factory.talos.dev/installer/ce4c980550dd2ab1b17bbf2b08801c7eb59418eafe8f279833297925d67c7515
+    networkInterfaces:
+      - deviceSelector:
+          physical: true
+        dhcp: false
+        addresses:
+          - 10.20.0.71/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 10.20.0.1
+        vip:
+          ip: 10.20.0.79
+  - hostname: talos-cp-03
+    ipAddress: 10.20.0.72
+    controlPlane: true
+    installDisk: /dev/sda
+    talosImageURL: factory.talos.dev/installer/ce4c980550dd2ab1b17bbf2b08801c7eb59418eafe8f279833297925d67c7515
+    networkInterfaces:
+      - deviceSelector:
+          physical: true
+        dhcp: false
+        addresses:
+          - 10.20.0.72/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 10.20.0.1
+        vip:
+          ip: 10.20.0.79
+
+# Applied to ALL nodes.
+patches:
+  - "@./patches/etcd-on-dedicated-disk.yaml"   # EPHEMERAL (/var incl. /var/lib/etcd) -> dedicated NVMe (sdb)
+  - "@./patches/machine-tuning.yaml"           # DNS, NTP, KubePrism
+
+# Applied to control-plane nodes (all of them here).
+controlPlane:
+  patches:
+    - "@./patches/disable-kube-proxy.yaml"     # Cilium replaces kube-proxy

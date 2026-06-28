@@ -1,0 +1,8 @@
+# ┌──────────────────────────────────────────────────────────────────────┐
+# │  EDIT THESE TWO LINES TO UPGRADE THE CLUSTER, THEN FOLLOW THE README.  │
+# │  talhelper substitutes ${talosVersion} / ${kubernetesVersion} into     │
+# │  talconfig.yaml. Bumping a value here is the entire "upgrade-by-git"    │
+# │  diff for the OS / Kubernetes layer.                                    │
+# └──────────────────────────────────────────────────────────────────────┘
+talosVersion: v1.13.5        # ships Kubernetes v1.36.2 (kernel 6.18.x)
+kubernetesVersion: v1.36.2

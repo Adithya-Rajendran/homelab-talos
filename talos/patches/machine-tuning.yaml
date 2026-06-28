@@ -1,0 +1,16 @@
+# Node-level settings. Interfaces are static (dhcp: false), so DNS must be set explicitly.
+machine:
+  network:
+    nameservers:
+      - 1.1.1.1
+      - 1.0.0.1
+  time:
+    servers:
+      - time.cloudflare.com
+      - pool.ntp.org
+  features:
+    # KubePrism gives a local, HA in-cluster apiserver endpoint at https://localhost:7445.
+    # Cilium is pointed at it (k8sServiceHost/Port) so the CNI doesn't depend on the VIP.
+    kubePrism:
+      enabled: true
+      port: 7445

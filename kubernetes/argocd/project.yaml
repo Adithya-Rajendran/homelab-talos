@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: talos-homelab
+  namespace: argocd
+spec:
+  description: Talos homelab platform (CNI, networking, secrets, certs)
+  sourceRepos:
+    - https://github.com/Adithya-Rajendran/talos-proxmox-gitops.git
+    - https://helm.cilium.io
+    - https://charts.jetstack.io
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: "*"
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"

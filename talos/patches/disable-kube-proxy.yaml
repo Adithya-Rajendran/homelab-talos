@@ -1,0 +1,4 @@
+# Disable the Talos-managed kube-proxy; Cilium runs in kubeProxyReplacement mode instead.
+cluster:
+  proxy:
+    disabled: true

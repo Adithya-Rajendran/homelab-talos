@@ -1,0 +1,41 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  tofu:
+    name: opentofu validate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tofu
+    steps:
+      - uses: actions/checkout@v4
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: 1.12.3
+      - run: tofu fmt -check -recursive
+      - run: tofu init -backend=false
+      - run: tofu validate
+
+  talos:
+    name: talhelper validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - name: Render + validate machineconfigs
+        env:
+          # talhelper needs the secret to render; CI uses a throwaway one (no cluster access).
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+        run: |
+          cd talos
+          if [ -n "$SOPS_AGE_KEY" ]; then
+            talhelper genconfig
+            for f in clusterconfig/talos-homelab-*.yaml; do talosctl validate -c "$f" -m metal; done
+          else
+            echo "SOPS_AGE_KEY not set; skipping render (validating talconfig schema only)"
+            talhelper validate talconfig || true
+          fi

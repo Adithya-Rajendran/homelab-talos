@@ -1,0 +1,31 @@
+# Cilium — Argo adopts the Helm release that was installed during bootstrap, using the
+# SAME chart version + the SAME values file from git. From now on, change Cilium by editing
+# kubernetes/bootstrap/cilium-values.yaml (or the chart version here) and committing.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cilium
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2" # CNI first
+spec:
+  project: talos-homelab
+  sources:
+    - repoURL: https://helm.cilium.io
+      chart: cilium
+      targetRevision: 1.19.5
+      helm:
+        valueFiles:
+          - $values/kubernetes/bootstrap/cilium-values.yaml
+    - repoURL: https://github.com/Adithya-Rajendran/talos-proxmox-gitops.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: false # never let a CNI mishap prune the datapath
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

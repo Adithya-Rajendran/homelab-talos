@@ -1,0 +1,19 @@
+# Pinned tool versions for reproducible cluster lifecycle management.
+# Install everything with:  mise install
+# These versions were current as of 2026-06 and are bumped via Renovate PRs.
+[tools]
+talosctl   = "1.13.5"     # must match the cluster's Talos version (talos/talenv.yaml)
+talhelper  = "3.1.12"     # renders Talos machineconfigs from talconfig.yaml
+opentofu   = "1.12.3"     # VM lifecycle (tofu/)
+argocd     = "3.4.4"      # in-cluster GitOps CLI
+sops       = "3.13.1"     # encrypts talos/talsecret.sops.yaml
+age        = "1.3.1"      # age-keygen / SOPS recipient
+yq         = "4.53.3"
+kustomize  = "5.8.1"
+"cilium-cli" = "0.19.5"   # cilium status / connectivity checks
+kubectl    = "1.36.2"
+helm       = "3.16.4"
+
+[env]
+# talhelper + sops read the age key from here. Keep the key OFF git (see .gitignore).
+SOPS_AGE_KEY_FILE = "{{env.HOME}}/.config/sops/age/keys.txt"

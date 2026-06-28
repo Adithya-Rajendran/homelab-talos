@@ -1,0 +1,10 @@
+# One-time Argo CD install (pinned). Bootstrap with:
+#   kubectl apply -k kubernetes/bootstrap/argocd --server-side
+# After Argo is up, apply the project + root app-of-apps (see README) and Argo manages
+# the rest — including, optionally, itself.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: argocd
+resources:
+  - namespace.yaml
+  - https://raw.githubusercontent.com/argoproj/argo-cd/v3.4.4/manifests/install.yaml
