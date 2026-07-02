@@ -14,12 +14,12 @@ nextcloud:
     existingSecret: nextcloud-stack-admin        # keys: admin-user, admin-password
   settings:
     # DNS convention mirrors RKE2 (cloud.rke.alaras.net -> 10.20.0.240):
-    # create a record cloud.talos.alaras.net -> 10.20.0.225 (the pinned Gateway LB IP).
-    overwriteHost: cloud.talos.alaras.net
+    # create a record cloud.alaras.net -> 10.20.0.225 (the pinned Gateway LB IP).
+    overwriteHost: cloud.alaras.net
     overwriteProtocol: https                     # TLS terminates at the Cilium Gateway
     trustedDomains:
       - localhost
-      - cloud.talos.alaras.net
+      - cloud.alaras.net
   web:
     httpsBehindProxy: true                       # Envoy forwards X-Forwarded-Proto: https
     realIp:
@@ -73,7 +73,7 @@ gatewayApi:
     namespace: ""              # empty = same namespace
     sectionName: https         # attach to the TLS listener (mirrors RKE2)
   hostnames:
-    - cloud.talos.alaras.net
+    - cloud.alaras.net
 
 networkPolicy:
   enabled: true

@@ -21,9 +21,6 @@ spec:
     kind: ClusterIssuer
   commonName: "*.alaras.net"
   dnsNames:
-    # X.509 wildcards only cover ONE label (unlike Gateway API listeners),
-    # so both levels are needed for cloud.talos.alaras.net to verify.
-    - "*.alaras.net"
-    - "*.talos.alaras.net"
+    - "*.alaras.net" # covers cloud.alaras.net (X.509 wildcard = one label)
     - alaras.net
   duration: 8760h # 1y; cert-manager auto-renews
