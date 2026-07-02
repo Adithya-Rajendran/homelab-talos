@@ -12,6 +12,7 @@ spec:
     - https://charts.jetstack.io
     - https://ceph.github.io/csi-charts
     - https://charts.goauthentik.io
+    - https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
   destinations:
     - server: https://kubernetes.default.svc
       namespace: "*"

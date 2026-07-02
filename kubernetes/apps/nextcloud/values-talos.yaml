@@ -94,12 +94,14 @@ metrics:
   serviceMonitor:
     enabled: false             # monitoring.coreos.com CRDs absent — enabling breaks sync
 
+# Nightly backup to NFS (mirrors RKE2: 100Gi RWX on nfs-csi-retain, 02:30 daily,
+# 14-day retention — chart defaults). Requires the storage-nfs app (csi-driver-nfs
+# + StorageClasses) and the TrueNAS export ACL allowing the node IPs.
 backup:
-  # Off for now: no NFS CSI here, and the chart's default backup PVC is RWX
-  # (unbindable on ceph-rbd). To enable later on-cluster:
-  #   backup: { enabled: true, persistence: { storageClassName: ceph-rbd,
-  #             accessModes: ["ReadWriteOnce"], size: 100Gi } }
-  enabled: false
+  enabled: true
+  persistence:
+    storageClassName: nfs-csi-retain
+    size: 100Gi
 
 # whiteboard: RKE2 runs it; enable later by sealing nextcloud-stack-whiteboard
 # (bootstrap-secrets.sh --whiteboard) and setting whiteboard.enabled=true here.

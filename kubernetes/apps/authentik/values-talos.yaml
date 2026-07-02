@@ -4,9 +4,8 @@
 # Differences from RKE2, on purpose:
 #   - blueprints.configMaps: the Nextcloud OIDC provider/app is DECLARATIVE here
 #     (on RKE2 it was clicked together in the UI and lives only in its DB)
-#   - no /media RWX PVC yet (no NFS/RWX storage class on this cluster; cosmetic —
-#     uploaded icons/backgrounds don't persist; add csi-driver-nfs later for parity)
 #   - HTTPRoute lives in kubernetes/apps/authentik-config/ (chart route support is beta)
+# /media on RWX NFS (authentik-media PVC, authentik-config app) mirrors RKE2.
 
 global:
   envFrom:
@@ -20,6 +19,16 @@ authentik:
   log_level: info
   error_reporting:
     enabled: false
+  # media/reports on the shared /media NFS mount (mirrors RKE2)
+  storage:
+    file:
+      path: /media
+    media:
+      file:
+        path: /media
+    reports:
+      file:
+        path: /media
   postgresql:
     name: authentik
     user: authentik
@@ -43,6 +52,13 @@ server:
   containerSecurityContext:
     allowPrivilegeEscalation: false
     capabilities: { drop: [ALL] }
+  volumes:
+    - name: media
+      persistentVolumeClaim:
+        claimName: authentik-media
+  volumeMounts:
+    - name: media
+      mountPath: /media
   ingress:
     enabled: false
   route:
@@ -55,6 +71,13 @@ worker:
     enabled: true
     serviceMonitor:
       enabled: false
+  volumes:
+    - name: media
+      persistentVolumeClaim:
+        claimName: authentik-media
+  volumeMounts:
+    - name: media
+      mountPath: /media
   resources:
     requests: { cpu: 100m, memory: 512Mi }
     limits: { memory: 1Gi }

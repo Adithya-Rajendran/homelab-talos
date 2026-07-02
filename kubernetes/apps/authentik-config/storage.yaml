@@ -1,0 +1,34 @@
+# Authentik persistent storage on NFS — mirrors RKE2 (media 5Gi RWX nfs-csi shared
+# by server+worker; backups 20Gi RWX nfs-csi-retain, named subdir on TrueNAS).
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: authentik-media
+  namespace: authentik
+  labels:
+    app.kubernetes.io/name: authentik
+    app.kubernetes.io/component: media
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-csi
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: authentik-backups
+  namespace: authentik
+  labels:
+    app.kubernetes.io/name: authentik
+    app.kubernetes.io/component: backup
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-csi-retain
+  resources:
+    requests:
+      storage: 20Gi

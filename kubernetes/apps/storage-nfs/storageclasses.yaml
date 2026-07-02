@@ -1,0 +1,39 @@
+# NFS StorageClasses — byte-for-byte mirror of the RKE2 pair (same TrueNAS server
+# + export; the export ACL allows the Talos node IPs 10.20.0.70/.71/.72 — CSI NFS
+# mounts happen on the NODES, not in pods).
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-csi
+provisioner: nfs.csi.k8s.io
+parameters:
+  server: 10.0.0.13
+  share: /mnt/datapool/Shares/k3s
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+mountOptions:
+  - nfsvers=4.1
+  - hard
+  - timeo=600
+  - retrans=2
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-csi-retain
+provisioner: nfs.csi.k8s.io
+parameters:
+  server: 10.0.0.13
+  share: /mnt/datapool/Shares/k3s
+  # named subdirs (instead of pvc-<uuid>) so retained data is findable on TrueNAS
+  subDir: ${pvc.metadata.name}
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+mountOptions:
+  - nfsvers=4.1
+  - hard
+  - timeo=600
+  - retrans=2

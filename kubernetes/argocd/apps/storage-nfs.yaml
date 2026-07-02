@@ -1,0 +1,21 @@
+# NFS StorageClasses (nfs-csi / nfs-csi-retain) — applied after the driver.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: storage-nfs
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: talos-homelab
+  source:
+    repoURL: https://github.com/Adithya-Rajendran/homelab-talos.git
+    targetRevision: main
+    path: kubernetes/apps/storage-nfs
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
