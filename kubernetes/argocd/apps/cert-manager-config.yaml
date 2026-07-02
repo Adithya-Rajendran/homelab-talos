@@ -1,0 +1,22 @@
+# cert-manager configuration: LE ClusterIssuers (DNS-01/Cloudflare, mirroring RKE2)
+# + the sealed Cloudflare API token. Synced after the cert-manager controller (wave 0).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager-config
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: talos-homelab
+  source:
+    repoURL: https://github.com/Adithya-Rajendran/homelab-talos.git
+    targetRevision: main
+    path: kubernetes/apps/cert-manager-config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

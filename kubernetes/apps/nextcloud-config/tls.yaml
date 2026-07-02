@@ -1,13 +1,8 @@
-# Self-signed TLS for the Nextcloud Gateway — fully self-contained (no ACME/DNS deps).
-# Swap `issuerRef` to a Let's Encrypt ClusterIssuer later (pure git change) once one exists;
-# browsers warn on self-signed until then, but Secure cookies / https login work.
----
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: selfsigned
-spec:
-  selfSigned: {}
+# Wildcard TLS for the *.alaras.net Gateway — Let's Encrypt via DNS-01/Cloudflare,
+# mirroring RKE2's gateway/wildcard-tls (*.rke.alaras.net). Issuers + sealed token
+# live in kubernetes/apps/cert-manager-config/. secretName is unchanged from the
+# earlier self-signed cert, so the Gateway listener needed no edit — cert-manager
+# reissues into the same Secret.
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -17,10 +12,12 @@ metadata:
 spec:
   secretName: nextcloud-gateway-tls
   issuerRef:
-    name: selfsigned
+    name: letsencrypt-prod
     kind: ClusterIssuer
+    group: cert-manager.io
   commonName: "*.alaras.net"
   dnsNames:
-    - "*.alaras.net" # covers cloud.alaras.net (X.509 wildcard = one label)
-    - alaras.net
-  duration: 8760h # 1y; cert-manager auto-renews
+    - "*.alaras.net"
+  usages:
+    - digital signature
+    - key encipherment
