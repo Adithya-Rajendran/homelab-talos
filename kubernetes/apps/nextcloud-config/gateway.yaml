@@ -1,0 +1,33 @@
+# Cilium Gateway for Nextcloud — mirrors the RKE2 pattern (hostname -> LB IP directly,
+# TLS terminated at the gateway; RKE2's cloud.rke.alaras.net -> 10.20.0.240).
+# LB IP pinned to 10.20.0.225 (from CiliumLoadBalancerIPPool 10.20.0.224/28) so the DNS
+# record for cloud.talos.alaras.net is stable.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: nextcloud
+  namespace: nextcloud
+spec:
+  gatewayClassName: cilium
+  addresses:
+    - type: IPAddress
+      value: 10.20.0.225
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      hostname: cloud.talos.alaras.net
+      allowedRoutes:
+        namespaces:
+          from: Same
+    - name: https
+      protocol: HTTPS
+      port: 443
+      hostname: cloud.talos.alaras.net
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: nextcloud-gateway-tls
+      allowedRoutes:
+        namespaces:
+          from: Same

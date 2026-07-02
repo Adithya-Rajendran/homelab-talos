@@ -1,0 +1,102 @@
+# nextcloud-stack 0.8.1 values overlay for the homelab-talos cluster
+# (Talos 1.13.5 / k8s 1.36 / Cilium Gateway API / ceph-rbd / Argo CD).
+# Release name MUST be "nextcloud-stack" in namespace "nextcloud" — the
+# existingSecret names follow bootstrap-secrets.sh's <release>-* convention
+# (SealedSecrets live in kubernetes/apps/nextcloud-config/).
+# Sizes/features mirror the RKE2 install where sensible.
+
+# Default images live on dhi.io — pull secret sealed alongside the app secrets.
+imagePullSecrets:
+  - name: dhi-pull
+
+nextcloud:
+  admin:
+    existingSecret: nextcloud-stack-admin        # keys: admin-user, admin-password
+  settings:
+    # DNS convention mirrors RKE2 (cloud.rke.alaras.net -> 10.20.0.240):
+    # create a record cloud.talos.alaras.net -> 10.20.0.225 (the pinned Gateway LB IP).
+    overwriteHost: cloud.talos.alaras.net
+    overwriteProtocol: https                     # TLS terminates at the Cilium Gateway
+    trustedDomains:
+      - localhost
+      - cloud.talos.alaras.net
+  web:
+    httpsBehindProxy: true                       # Envoy forwards X-Forwarded-Proto: https
+    realIp:
+      header: X-Forwarded-For
+      recursive: true
+      # Empty = real-IP rewrite disabled (logs show the gateway IP — never spoofable).
+      # To log real client IPs, add the pod CIDR (Cilium Envoy hop) here later.
+      trustedCidrs: []
+  pdb:
+    # Chart default (maxUnavailable: 0 on 1 replica) blocks node drains — it would
+    # wedge every `talosctl upgrade` on this 3-node cluster.
+    enabled: false
+  persistence:
+    webroot:
+      size: 10Gi
+      storageClassName: ceph-rbd                 # explicit: avoids Argo OutOfSync from SC defaulting
+    data:
+      size: 50Gi                                 # mirrors RKE2
+      storageClassName: ceph-rbd
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { cpu: "2", memory: 2Gi }            # 4Gi chart default is oversized for this install
+
+postgres:
+  # manageAppRole default true => Secret carries BOTH nextcloud-db-password
+  # and postgres-admin-password keys (bootstrap-secrets.sh does this).
+  auth:
+    database: nextcloud
+    username: nextcloud
+    existingSecret: nextcloud-stack-postgres
+  persistence:
+    size: 20Gi                                   # mirrors RKE2. IMMUTABLE once created
+    storageClassName: ceph-rbd                   # (StatefulSet volumeClaimTemplates).
+
+valkey:
+  auth:
+    enabled: true
+    existingSecret: nextcloud-stack-valkey       # keys: valkey-password, valkey.conf
+
+# Mirrors RKE2. Heavy-ish (1Gi req / 3Gi lim, ~250MB signature pull on cold start).
+clamav:
+  enabled: true
+
+# --- Exposure: Gateway API (Cilium) ------------------------------------------
+# The chart renders ONLY the HTTPRoute; the Gateway lives in
+# kubernetes/apps/nextcloud-config/gateway.yaml (pinned LB IP 10.20.0.225).
+gatewayApi:
+  enabled: true
+  parentRef:
+    name: nextcloud            # the pre-created Gateway's metadata.name
+    namespace: ""              # empty = same namespace
+    sectionName: https         # attach to the TLS listener (mirrors RKE2)
+  hostnames:
+    - cloud.talos.alaras.net
+
+networkPolicy:
+  enabled: true
+  # MUST be cilium here: the Cilium Gateway proxy carries the reserved `ingress`
+  # identity (fromEntities: [ingress]) — the plain-k8s flavor would drop gateway traffic.
+  flavor: cilium
+  nextcloudIngressFrom: []
+  allowAllEgress: true         # app store / freshclam / federation need world egress
+
+metrics:
+  enabled: false               # no Prometheus on this cluster yet
+  serviceMonitor:
+    enabled: false             # monitoring.coreos.com CRDs absent — enabling breaks sync
+
+backup:
+  # Off for now: no NFS CSI here, and the chart's default backup PVC is RWX
+  # (unbindable on ceph-rbd). To enable later on-cluster:
+  #   backup: { enabled: true, persistence: { storageClassName: ceph-rbd,
+  #             accessModes: ["ReadWriteOnce"], size: 100Gi } }
+  enabled: false
+
+# whiteboard: RKE2 runs it; enable later by sealing nextcloud-stack-whiteboard
+# (bootstrap-secrets.sh --whiteboard) and setting whiteboard.enabled=true here.
+
+tests:
+  enabled: false               # Argo skips helm-test hooks; keeps the manifest set clean

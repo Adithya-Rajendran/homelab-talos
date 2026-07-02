@@ -1,0 +1,24 @@
+# Nextcloud prerequisites: sealed secrets (admin/postgres/valkey/dhi-pull), the Cilium
+# Gateway (pinned LB 10.20.0.225), and self-signed TLS. Synced BEFORE the chart app.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nextcloud-config
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  project: talos-homelab
+  source:
+    repoURL: https://github.com/Adithya-Rajendran/homelab-talos.git
+    targetRevision: main
+    path: kubernetes/apps/nextcloud-config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nextcloud
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

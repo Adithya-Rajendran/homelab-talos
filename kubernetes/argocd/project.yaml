@@ -7,6 +7,7 @@ spec:
   description: Talos homelab platform (CNI, networking, secrets, certs)
   sourceRepos:
     - https://github.com/Adithya-Rajendran/homelab-talos.git
+    - https://github.com/Adithya-Rajendran/nextcloud-stack-chart.git
     - https://helm.cilium.io
     - https://charts.jetstack.io
     - https://ceph.github.io/csi-charts

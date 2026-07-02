@@ -1,0 +1,33 @@
+# Nextcloud stack — the user's own chart, sourced straight from its public repo;
+# values overlay lives in THIS repo (multi-source $values). Upgrades are pure git:
+# chart changes land in the chart repo, config changes in values-talos.yaml.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nextcloud
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  project: talos-homelab
+  sources:
+    - repoURL: https://github.com/Adithya-Rajendran/nextcloud-stack-chart.git
+      targetRevision: main
+      path: .
+      helm:
+        releaseName: nextcloud-stack   # MUST stay fixed: selectors + <release>-* secret names
+        valueFiles:
+          - $values/kubernetes/apps/nextcloud/values-talos.yaml
+    - repoURL: https://github.com/Adithya-Rajendran/homelab-talos.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nextcloud
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
