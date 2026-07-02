@@ -44,7 +44,7 @@ nodes:
     talosImageURL: factory.talos.dev/installer/ce4c980550dd2ab1b17bbf2b08801c7eb59418eafe8f279833297925d67c7515
     networkInterfaces:
       - deviceSelector:
-          physical: true
+          hardwareAddr: "bc:24:11:86:13:e4"   # net0 — Access/VLAN20
         dhcp: false
         addresses:
           - 10.20.0.70/24
@@ -53,6 +53,11 @@ nodes:
             gateway: 10.20.0.1
         vip:
           ip: 10.20.0.79
+      - deviceSelector:
+          hardwareAddr: "bc:24:11:64:00:70"   # net1 — Ceph/VLAN100 (storage only, no gateway)
+        dhcp: false
+        addresses:
+          - 10.100.0.70/24
   - hostname: talos-cp-02
     ipAddress: 10.20.0.71
     controlPlane: true
@@ -60,7 +65,7 @@ nodes:
     talosImageURL: factory.talos.dev/installer/ce4c980550dd2ab1b17bbf2b08801c7eb59418eafe8f279833297925d67c7515
     networkInterfaces:
       - deviceSelector:
-          physical: true
+          hardwareAddr: "bc:24:11:7c:99:8f"   # net0 — Access/VLAN20
         dhcp: false
         addresses:
           - 10.20.0.71/24
@@ -69,6 +74,11 @@ nodes:
             gateway: 10.20.0.1
         vip:
           ip: 10.20.0.79
+      - deviceSelector:
+          hardwareAddr: "bc:24:11:64:00:71"   # net1 — Ceph/VLAN100 (storage only, no gateway)
+        dhcp: false
+        addresses:
+          - 10.100.0.71/24
   - hostname: talos-cp-03
     ipAddress: 10.20.0.72
     controlPlane: true
@@ -76,7 +86,7 @@ nodes:
     talosImageURL: factory.talos.dev/installer/ce4c980550dd2ab1b17bbf2b08801c7eb59418eafe8f279833297925d67c7515
     networkInterfaces:
       - deviceSelector:
-          physical: true
+          hardwareAddr: "bc:24:11:34:38:f8"   # net0 — Access/VLAN20
         dhcp: false
         addresses:
           - 10.20.0.72/24
@@ -85,6 +95,11 @@ nodes:
             gateway: 10.20.0.1
         vip:
           ip: 10.20.0.79
+      - deviceSelector:
+          hardwareAddr: "bc:24:11:64:00:72"   # net1 — Ceph/VLAN100 (storage only, no gateway)
+        dhcp: false
+        addresses:
+          - 10.100.0.72/24
 
 # Applied to ALL nodes.
 patches:

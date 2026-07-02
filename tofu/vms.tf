@@ -81,9 +81,18 @@ resource "proxmox_virtual_environment_vm" "talos" {
   # subsequent boots run from the installed system. No manual ISO eject needed.
   boot_order = ["scsi0", "ide3"]
 
+  # net0 — primary (VLAN 20 / Access): node IP + control-plane VIP + default route
   network_device {
-    bridge = var.vm_bridge
-    model  = "virtio"
+    bridge      = var.vm_bridge
+    model       = "virtio"
+    mac_address = each.value.mac
+  }
+
+  # net1 — storage (VLAN 100 / Ceph): reaches the Ceph mons (10.100.0.11/.12/.13)
+  network_device {
+    bridge      = var.ceph_bridge
+    model       = "virtio"
+    mac_address = each.value.ceph_mac
   }
 
   serial_device {} # socket (required; Talos console + early-boot logs)
