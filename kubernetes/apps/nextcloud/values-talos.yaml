@@ -17,6 +17,11 @@ nextcloud:
     # create a record cloud.alaras.net -> 10.20.0.225 (the pinned Gateway LB IP).
     overwriteHost: cloud.alaras.net
     overwriteProtocol: https                     # TLS terminates at the Cilium Gateway
+    # The OIDC backchannel calls authentik.alaras.net which resolves to the
+    # in-cluster gateway VIP (RFC1918) — Nextcloud blocks that by default.
+    # Activates with chart >= 0.9.1 (PR #24); until then the same value is set
+    # imperatively via occ (persisted on the webroot PVC).
+    allowLocalRemoteServers: true
     trustedDomains:
       - localhost
       - cloud.alaras.net
