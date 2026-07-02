@@ -8,6 +8,10 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "4"
+    # ServerSideApply + CRD structural defaults (HTTPRoute parentRef group/kind,
+    # STS volumeClaimTemplate defaults) confuse the client-side diff into a
+    # permanent OutOfSync-with-empty-diff. Server-side dry-run diffing fixes it.
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
 spec:
   project: talos-homelab
   sources:
