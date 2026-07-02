@@ -19,7 +19,11 @@ spec:
   issuerRef:
     name: selfsigned
     kind: ClusterIssuer
-  commonName: cloud.talos.alaras.net
+  commonName: "*.alaras.net"
   dnsNames:
-    - cloud.talos.alaras.net
+    # X.509 wildcards only cover ONE label (unlike Gateway API listeners),
+    # so both levels are needed for cloud.talos.alaras.net to verify.
+    - "*.alaras.net"
+    - "*.talos.alaras.net"
+    - alaras.net
   duration: 8760h # 1y; cert-manager auto-renews
