@@ -1,0 +1,32 @@
+# Allow Nextcloud -> Authentik OIDC traffic (mirrors RKE2's hand-applied
+# nextcloud-allow-authentik-oidc CNP — here it lives in git).
+# Why this is needed: the user_oidc backchannel calls https://authentik.alaras.net,
+# which is this cluster's own Cilium Gateway VIP. Cilium enforces the SOURCE pod's
+# egress policy at the Envoy hop against the FINAL backend identity (the
+# authentik-server pods on their container ports 9000/9443) — the chart's
+# allowAllEgress (world) does not cover in-cluster identities, so without this
+# rule Envoy answers 403 and OIDC discovery/token calls fail.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: nextcloud-allow-authentik-oidc
+  namespace: nextcloud
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: nextcloud-stack
+      app.kubernetes.io/instance: nextcloud-stack
+      app.kubernetes.io/component: nextcloud
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: authentik
+            app.kubernetes.io/name: authentik
+            app.kubernetes.io/instance: authentik
+            app.kubernetes.io/component: server
+      toPorts:
+        - ports:
+            - port: "9000"
+              protocol: TCP
+            - port: "9443"
+              protocol: TCP
