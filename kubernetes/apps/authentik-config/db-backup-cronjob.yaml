@@ -71,7 +71,7 @@ spec:
           volumes:
             - name: backup
               persistentVolumeClaim:
-                claimName: authentik-backups
+                claimName: authentik-talos-backups
             - name: tmp
               emptyDir:
                 sizeLimit: 128Mi

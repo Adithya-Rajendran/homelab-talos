@@ -20,7 +20,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: authentik-backups
+  name: authentik-talos-backups
   namespace: authentik
   labels:
     app.kubernetes.io/name: authentik
