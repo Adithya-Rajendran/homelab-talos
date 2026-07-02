@@ -1,0 +1,34 @@
+# Authentik — official chart + values overlay from this repo (multi-source),
+# mirroring the RKE2 install; the Nextcloud OIDC provider is created declaratively
+# by the blueprint in authentik-config (no UI steps).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: authentik
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
+spec:
+  project: talos-homelab
+  sources:
+    - repoURL: https://charts.goauthentik.io
+      chart: authentik
+      targetRevision: 2026.5.3
+      helm:
+        releaseName: authentik
+        valueFiles:
+          - $values/kubernetes/apps/authentik/values-talos.yaml
+    - repoURL: https://github.com/Adithya-Rajendran/homelab-talos.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: authentik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

@@ -1,0 +1,23 @@
+# Shared *.alaras.net gateway + wildcard cert (mirrors RKE2's gateway ns pattern).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gateway
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: talos-homelab
+  source:
+    repoURL: https://github.com/Adithya-Rajendran/homelab-talos.git
+    targetRevision: main
+    path: kubernetes/apps/gateway
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gateway
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

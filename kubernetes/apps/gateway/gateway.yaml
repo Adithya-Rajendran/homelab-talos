@@ -1,0 +1,33 @@
+# Shared cluster gateway — mirrors RKE2's gateway/shared-gateway pattern:
+# one wildcard *.alaras.net front door in a dedicated namespace, any app namespace
+# may attach HTTPRoutes. LB IP pinned to 10.20.0.225 (DNS: point *.alaras.net
+# hosts for THIS cluster at it, e.g. cloud.alaras.net, authentik.alaras.net).
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: shared-gateway
+  namespace: gateway
+spec:
+  gatewayClassName: cilium
+  addresses:
+    - type: IPAddress
+      value: 10.20.0.225
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      hostname: "*.alaras.net"
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https
+      protocol: HTTPS
+      port: 443
+      hostname: "*.alaras.net"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: wildcard-tls
+      allowedRoutes:
+        namespaces:
+          from: All

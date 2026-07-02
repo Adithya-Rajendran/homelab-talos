@@ -1,0 +1,31 @@
+# Authentik prerequisites: sealed secrets, the Nextcloud OIDC blueprint ConfigMap,
+# and the HTTPRoute. Synced before the authentik chart (whose pods block on the
+# envFrom secret until it exists — safe ordering either way).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: authentik-config
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  project: talos-homelab
+  source:
+    repoURL: https://github.com/Adithya-Rajendran/homelab-talos.git
+    targetRevision: main
+    path: kubernetes/apps/authentik-config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: authentik
+  syncPolicy:
+    managedNamespaceMetadata:
+      labels:
+        # mirror RKE2's authentik namespace (restricted PSS)
+        pod-security.kubernetes.io/enforce: restricted
+        pod-security.kubernetes.io/audit: restricted
+        pod-security.kubernetes.io/warn: restricted
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

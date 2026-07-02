@@ -1,0 +1,18 @@
+# LE wildcard for the shared gateway (same name as RKE2's gateway/wildcard-tls).
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-tls
+  namespace: gateway
+spec:
+  secretName: wildcard-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+    group: cert-manager.io
+  commonName: "*.alaras.net"
+  dnsNames:
+    - "*.alaras.net"
+  usages:
+    - digital signature
+    - key encipherment

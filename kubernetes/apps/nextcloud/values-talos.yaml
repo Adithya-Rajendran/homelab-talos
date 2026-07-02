@@ -64,14 +64,15 @@ clamav:
   enabled: true
 
 # --- Exposure: Gateway API (Cilium) ------------------------------------------
-# The chart renders ONLY the HTTPRoute; the Gateway lives in
-# kubernetes/apps/nextcloud-config/gateway.yaml (pinned LB IP 10.20.0.225).
+# The chart renders ONLY the HTTPRoute; it attaches to the SHARED *.alaras.net
+# gateway in ns 'gateway' (kubernetes/apps/gateway/, pinned LB IP 10.20.0.225) —
+# same pattern as RKE2's gateway/shared-gateway.
 gatewayApi:
   enabled: true
   parentRef:
-    name: nextcloud            # the pre-created Gateway's metadata.name
-    namespace: ""              # empty = same namespace
-    sectionName: https         # attach to the TLS listener (mirrors RKE2)
+    name: shared-gateway
+    namespace: gateway
+    sectionName: https
   hostnames:
     - cloud.alaras.net
 
@@ -97,6 +98,28 @@ backup:
 
 # whiteboard: RKE2 runs it; enable later by sealing nextcloud-stack-whiteboard
 # (bootstrap-secrets.sh --whiteboard) and setting whiteboard.enabled=true here.
+
+# --- SSO via Authentik (user_oidc) --------------------------------------------
+# INERT until the nextcloud-stack-chart 'sso' PR is merged (unknown values keys are
+# ignored by helm). Once merged, the db-migrate Job installs user_oidc and upserts
+# this provider on every sync — zero manual steps. Client credentials come from the
+# sealed nextcloud-stack-sso Secret; the same secret value is what the Authentik
+# blueprint installs on its side (authentik-blueprint-nextcloud).
+sso:
+  enabled: true
+  auth:
+    existingSecret: nextcloud-stack-sso   # keys: client-id, client-secret
+  provider:
+    identifier: authentik
+    discoveryUri: https://authentik.alaras.net/application/o/nextcloud/.well-known/openid-configuration
+    scope: "openid email profile"
+    uniqueUid: false           # sub_mode=user_uuid in the blueprint already gives stable unique subs
+    groupProvisioning: false
+    mappings:
+      uid: preferred_username
+      displayName: name
+      email: email
+      groups: groups
 
 tests:
   enabled: false               # Argo skips helm-test hooks; keeps the manifest set clean

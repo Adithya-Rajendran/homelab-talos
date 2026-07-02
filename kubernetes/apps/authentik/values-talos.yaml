@@ -1,0 +1,93 @@
+# authentik 2026.5.3 values for the homelab-talos cluster — mirrors the RKE2 install
+# (same hardened securityContexts, resources, log level, PG sizing/max_connections;
+# same bootstrap admin + secret_key + PG password via sealed authentik-secrets).
+# Differences from RKE2, on purpose:
+#   - blueprints.configMaps: the Nextcloud OIDC provider/app is DECLARATIVE here
+#     (on RKE2 it was clicked together in the UI and lives only in its DB)
+#   - no /media RWX PVC yet (no NFS/RWX storage class on this cluster; cosmetic —
+#     uploaded icons/backgrounds don't persist; add csi-driver-nfs later for parity)
+#   - HTTPRoute lives in kubernetes/apps/authentik-config/ (chart route support is beta)
+
+global:
+  envFrom:
+    - secretRef:
+        name: authentik-secrets   # AUTHENTIK_SECRET_KEY, AUTHENTIK_POSTGRESQL__PASSWORD,
+                                  # AUTHENTIK_BOOTSTRAP_{EMAIL,PASSWORD,TOKEN},
+                                  # NEXTCLOUD_OIDC_CLIENT_SECRET (blueprint !Env — worker needs it)
+
+authentik:
+  secret_key: ""                  # empty => AUTHENTIK_SECRET_KEY from envFrom wins
+  log_level: info
+  error_reporting:
+    enabled: false
+  postgresql:
+    name: authentik
+    user: authentik
+    password: ""                  # empty => AUTHENTIK_POSTGRESQL__PASSWORD from envFrom
+
+server:
+  replicas: 1
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: false              # no prometheus-operator CRDs on this cluster
+  resources:
+    requests: { cpu: 250m, memory: 768Mi }
+    limits: { memory: 1536Mi }
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile: { type: RuntimeDefault }
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities: { drop: [ALL] }
+  ingress:
+    enabled: false
+  route:
+    main:
+      enabled: false
+
+worker:
+  replicas: 1
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: false
+  resources:
+    requests: { cpu: 100m, memory: 512Mi }
+    limits: { memory: 1Gi }
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile: { type: RuntimeDefault }
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities: { drop: [ALL] }
+
+blueprints:
+  configMaps:
+    - authentik-blueprint-nextcloud   # kubernetes/apps/authentik-config/blueprint-nextcloud.yaml
+
+geoip:
+  enabled: false
+
+postgresql:
+  enabled: true                   # chart pins image to docker.io/library/postgres:17.10 (as on RKE2)
+  auth:
+    username: authentik
+    database: authentik
+    existingSecret: authentik-postgresql-creds   # sealed; password == AUTHENTIK_POSTGRESQL__PASSWORD
+  primary:
+    persistence:
+      enabled: true
+      storageClass: ceph-rbd
+      size: 10Gi                  # mirrors RKE2
+    resources:
+      requests: { cpu: 100m, memory: 512Mi }
+      limits: { cpu: "1", memory: 512Mi }
+    extendedConfiguration: |
+      max_connections = 500

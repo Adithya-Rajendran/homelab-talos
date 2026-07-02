@@ -11,6 +11,7 @@ spec:
     - https://helm.cilium.io
     - https://charts.jetstack.io
     - https://ceph.github.io/csi-charts
+    - https://charts.goauthentik.io
   destinations:
     - server: https://kubernetes.default.svc
       namespace: "*"
